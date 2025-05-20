@@ -16,5 +16,8 @@ export default {
       message_type: messageType || undefined,
       user_id: userId || undefined
     })
+  },
+  searchUserLogs(params) {
+    return apiClient.post('/_api/client/r0/log_center/search_user_log', params)
   }
 }

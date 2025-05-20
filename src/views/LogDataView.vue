@@ -56,17 +56,6 @@
               <el-option label="文件消息" value="m.file" />
             </el-select>
           </div>
-          
-          <div class="filter-item">
-            <span class="filter-label">用户ID：</span>
-            <el-input
-              v-model="filters.userId"
-              placeholder="请输入用户ID"
-              clearable
-              size="small"
-              class="dark-input"
-            />
-          </div>
         </div>
 
         <div class="filter-group filter-button-group">
@@ -113,8 +102,9 @@
       </el-row>
       <!-- 分组表格区域 -->
       <el-row :gutter="20">
-        <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
-          <el-card class="table-card custom-table-card">
+        <!-- 左侧：消息、加解密、房间/Socket -->
+        <el-col :xs="24" :sm="24" :md="16" :lg="16" :xl="16">
+          <el-card class="table-card custom-table-card" style="margin-bottom: 20px;">
             <template #header>
               <div class="card-header"><h3>消息相关</h3></div>
             </template>
@@ -126,25 +116,7 @@
               </el-table>
             </div>
           </el-card>
-        </el-col>
-        <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
-          <el-card class="table-card custom-table-card">
-            <template #header>
-              <div class="card-header"><h3>上传相关</h3></div>
-            </template>
-            <div class="table-wrapper">
-              <el-table :data="actionGroup.upload" size="small" stripe style="width: 100%" class="dark-table custom-border-table no-header-line">
-                <el-table-column prop="name" label="事件" min-width="120" />
-                <el-table-column prop="value" label="数值" width="100" align="right" />
-                <el-table-column prop="key" label="字段" min-width="140" class-name="field-column" />
-              </el-table>
-            </div>
-          </el-card>
-        </el-col>
-      </el-row>
-      <el-row :gutter="20">
-        <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
-          <el-card class="table-card custom-table-card">
+          <el-card class="table-card custom-table-card" style="margin-bottom: 20px;">
             <template #header>
               <div class="card-header"><h3>加解密相关</h3></div>
             </template>
@@ -156,14 +128,27 @@
               </el-table>
             </div>
           </el-card>
-        </el-col>
-        <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
           <el-card class="table-card custom-table-card">
             <template #header>
               <div class="card-header"><h3>房间/Socket相关</h3></div>
             </template>
             <div class="table-wrapper">
               <el-table :data="actionGroup.roomSocket" size="small" stripe style="width: 100%" class="dark-table custom-border-table no-header-line">
+                <el-table-column prop="name" label="事件" min-width="120" />
+                <el-table-column prop="value" label="数值" width="100" align="right" />
+                <el-table-column prop="key" label="字段" min-width="140" class-name="field-column" />
+              </el-table>
+            </div>
+          </el-card>
+        </el-col>
+        <!-- 右侧：上传相关 -->
+        <el-col :xs="24" :sm="24" :md="8" :lg="8" :xl="8">
+          <el-card class="table-card custom-table-card">
+            <template #header>
+              <div class="card-header"><h3>上传相关</h3></div>
+            </template>
+            <div class="table-wrapper">
+              <el-table :data="actionGroup.upload" size="small" stripe style="width: 100%" class="dark-table custom-border-table no-header-line">
                 <el-table-column prop="name" label="事件" min-width="120" />
                 <el-table-column prop="value" label="数值" width="100" align="right" />
                 <el-table-column prop="key" label="字段" min-width="140" class-name="field-column" />
@@ -188,16 +173,77 @@
           </el-card>
         </el-col>
       </el-row>
-      <el-card class="table-card custom-table-card" style="margin-top: 20px;">
+      <!-- user_logs 表格及筛选 -->
+      <el-card v-if="logData.user_logs && logData.user_logs.length" class="table-card custom-table-card" style="margin-top: 32px;">
         <template #header>
           <div class="card-header">
-            <h3>其它数据字段</h3>
+            <h3>用户日志明细</h3>
           </div>
         </template>
+        <div class="user-logs-filter-bar" style="margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+          <el-input v-model="userLogsFilter.device_id" placeholder="筛选 device_id" size="small" class="dark-input" clearable style="width: 180px;" />
+          <el-input v-model="userLogsFilter.launch_id" placeholder="筛选 launch_id" size="small" class="dark-input" clearable style="width: 180px;" />
+          <el-input v-model="userLogsFilter.event_type" placeholder="筛选 event_type" size="small" class="dark-input" clearable style="width: 180px;" />
+          <el-input v-model="userLogsFilter.event_id" placeholder="筛选 event_id" size="small" class="dark-input" clearable style="width: 180px;" />
+          <el-input v-model="userLogsFilter.local_event_id" placeholder="筛选 local_event_id" size="small" class="dark-input" clearable style="width: 180px;" />
+          <el-button size="small" @click="clearUserLogsFilter" type="info">重置</el-button>
+        </div>
         <div class="table-wrapper">
-          <el-table :data="otherLogDataFields" size="small" stripe style="width: 100%" class="dark-table custom-border-table no-header-line">
-            <el-table-column prop="key" label="字段名" min-width="160" />
-            <el-table-column prop="value" label="内容" />
+          <el-table :data="filteredUserLogs" size="small" stripe style="width: 100%" class="dark-table custom-border-table no-header-line">
+            <el-table-column prop="sdn_url" label="sdn_url" min-width="160" />
+            <el-table-column prop="trace_id" label="trace_id" min-width="180" />
+            <el-table-column prop="user_id" label="user_id" min-width="220" />
+            <el-table-column prop="platform" label="platform" min-width="100" />
+            <el-table-column prop="device_id" label="device_id" min-width="180" />
+            <el-table-column prop="launch_id" label="launch_id" min-width="180" />
+            <el-table-column prop="action_type" label="action_type" min-width="160" />
+            <el-table-column prop="room_id" label="room_id" min-width="160" />
+            <el-table-column prop="event_type" label="event_type" min-width="160" />
+            <el-table-column prop="message_type" label="message_type" min-width="160" />
+            <el-table-column prop="local_event_id" label="local_event_id" min-width="180" />
+            <el-table-column prop="event_id" label="event_id" min-width="180" />
+            <el-table-column prop="other" label="other" min-width="120" />
+            <el-table-column prop="timestamp" label="timestamp" min-width="180" />
+          </el-table>
+        </div>
+      </el-card>
+      <!-- userLogs 独立搜索区和表格 -->
+      <el-card class="table-card custom-table-card" style="margin-top: 32px;">
+        <template #header>
+          <div class="card-header">
+            <h3>用户日志搜索</h3>
+          </div>
+        </template>
+        <div class="user-logs-filter-bar" style="margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+          <el-date-picker v-model="userLogsSearch.start_at" type="datetime" placeholder="开始时间" format="YYYY-MM-DD HH:mm:ss" value-format="x" size="small" class="dark-date-input" style="width: 180px;" />
+          <el-date-picker v-model="userLogsSearch.end_at" type="datetime" placeholder="结束时间" format="YYYY-MM-DD HH:mm:ss" value-format="x" size="small" class="dark-date-input" style="width: 180px;" />
+          <el-input v-model="userLogsSearch.user_id" placeholder="user_id" size="small" class="dark-input" clearable style="width: 160px;" />
+          <el-input v-model="userLogsSearch.device_id" placeholder="device_id" size="small" class="dark-input" clearable style="width: 140px;" />
+          <el-input v-model="userLogsSearch.launch_id" placeholder="launch_id" size="small" class="dark-input" clearable style="width: 140px;" />
+          <el-input v-model="userLogsSearch.action_type" placeholder="action_type" size="small" class="dark-input" clearable style="width: 140px;" />
+          <el-input v-model="userLogsSearch.room_id" placeholder="room_id" size="small" class="dark-input" clearable style="width: 140px;" />
+          <el-input v-model="userLogsSearch.message_type" placeholder="message_type" size="small" class="dark-input" clearable style="width: 140px;" />
+          <el-input v-model="userLogsSearch.event_id" placeholder="event_id" size="small" class="dark-input" clearable style="width: 140px;" />
+          <el-input v-model="userLogsSearch.local_event_id" placeholder="local_event_id" size="small" class="dark-input" clearable style="width: 140px;" />
+          <el-button size="small" type="primary" @click="searchUserLogs">搜索</el-button>
+          <el-button size="small" @click="clearUserLogsSearch" type="info">重置</el-button>
+        </div>
+        <div class="table-wrapper">
+          <el-table :data="userLogsSearchResult" size="small" stripe style="width: 100%" class="dark-table custom-border-table no-header-line">
+            <el-table-column prop="sdn_url" label="sdn_url" min-width="160" />
+            <el-table-column prop="trace_id" label="trace_id" min-width="180" />
+            <el-table-column prop="user_id" label="user_id" min-width="220" />
+            <el-table-column prop="platform" label="platform" min-width="100" />
+            <el-table-column prop="device_id" label="device_id" min-width="180" />
+            <el-table-column prop="launch_id" label="launch_id" min-width="180" />
+            <el-table-column prop="action_type" label="action_type" min-width="160" />
+            <el-table-column prop="room_id" label="room_id" min-width="160" />
+            <el-table-column prop="event_type" label="event_type" min-width="160" />
+            <el-table-column prop="message_type" label="message_type" min-width="160" />
+            <el-table-column prop="local_event_id" label="local_event_id" min-width="180" />
+            <el-table-column prop="event_id" label="event_id" min-width="180" />
+            <el-table-column prop="other" label="other" min-width="120" />
+            <el-table-column prop="timestamp" label="timestamp" min-width="180" />
           </el-table>
         </div>
       </el-card>
@@ -229,8 +275,7 @@ export default {
       filters: {
         startTime: Date.now() - 7 * 24 * 60 * 60 * 1000, // 默认7天前
         endTime: Date.now(),
-        messageType: '',
-        userId: ''
+        messageType: ''
       },
       logData: {
         action_type_count: {},
@@ -240,7 +285,27 @@ export default {
         send_to_sync_avg: 0,
         attachment_file_avg_time: 0,
         upload_gallery_list_avg_time: 0
-      }
+      },
+      userLogsFilter: {
+        device_id: '',
+        launch_id: '',
+        event_type: '',
+        event_id: '',
+        local_event_id: ''
+      },
+      userLogsSearch: {
+        start_at: 0,
+        end_at: Date.now(),
+        user_id: '',
+        device_id: '',
+        launch_id: '',
+        action_type: '',
+        room_id: '',
+        message_type: '',
+        event_id: '',
+        local_event_id: ''
+      },
+      userLogsSearchResult: [],
     }
   },
   computed: {
@@ -309,13 +374,28 @@ export default {
       ]
       return timeFields.filter(item => Number(item.value) > 0)
     },
-    otherLogDataFields() {
-      // 过滤掉已在卡片和表格中展示的字段
-      const exclude = ['action_type_count', 'avg_socket_time', 'user_count', 'message_send_avg_time', 'send_to_sync_avg', 'attachment_file_avg_time', 'upload_gallery_list_avg_time']
-      return Object.entries(this.logData)
-        .filter(([key, value]) => !exclude.includes(key))
-        .map(([key, value]) => ({ key, value: typeof value === 'object' ? JSON.stringify(value) : value }))
-    }
+    userLogsColumns() {
+      // 动态生成 user_logs 的所有字段列
+      const logs = this.logData.user_logs || []
+      if (!logs.length) return []
+      return Object.keys(logs[0]).map(key => ({
+        prop: key,
+        label: key,
+        minWidth: 120
+      }))
+    },
+    filteredUserLogs() {
+      // 多条件模糊筛选
+      const { device_id, launch_id, event_type, event_id, local_event_id } = this.userLogsFilter
+      return (this.logData.user_logs || []).filter(item => {
+        if (device_id && !(item.device_id || '').includes(device_id)) return false
+        if (launch_id && !(item.launch_id || '').includes(launch_id)) return false
+        if (event_type && !(item.event_type || '').includes(event_type)) return false
+        if (event_id && !(item.event_id || '').includes(event_id)) return false
+        if (local_event_id && !(item.local_event_id || '').includes(local_event_id)) return false
+        return true
+      })
+    },
   },
   mounted() {
     this.fetchData()
@@ -326,8 +406,7 @@ export default {
         const response = await api.getLogSummary(
           this.filters.startTime,
           this.filters.endTime,
-          this.filters.messageType,
-          this.filters.userId
+          this.filters.messageType
         )
         this.logData = adaptLogData(response.data)
       } catch (error) {
@@ -337,7 +416,44 @@ export default {
     },
     formatNumber(value) {
       return Number(value).toFixed(1)
-    }
+    },
+    clearUserLogsFilter() {
+      this.userLogsFilter = {
+        device_id: '',
+        launch_id: '',
+        event_type: '',
+        event_id: '',
+        local_event_id: ''
+      }
+    },
+    async searchUserLogs() {
+      try {
+        const params = { ...this.userLogsSearch }
+        // 时间戳转数字
+        params.start_at = Number(params.start_at) || 0
+        params.end_at = Number(params.end_at) || Date.now()
+        const { data } = await api.searchUserLogs(params)
+        this.userLogsSearchResult = Array.isArray(data) ? data : []
+      } catch (e) {
+        this.userLogsSearchResult = []
+        this.$message.error('用户日志搜索失败')
+      }
+    },
+    clearUserLogsSearch() {
+      this.userLogsSearch = {
+        start_at: 0,
+        end_at: Date.now(),
+        user_id: '',
+        device_id: '',
+        launch_id: '',
+        action_type: '',
+        room_id: '',
+        message_type: '',
+        event_id: '',
+        local_event_id: ''
+      }
+      this.userLogsSearchResult = []
+    },
   }
 }
 </script>
