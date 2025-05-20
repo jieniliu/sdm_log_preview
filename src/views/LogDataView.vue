@@ -326,15 +326,18 @@ export default {
         upload_image: '上传图片',
         upload_image_success: '上传图片成功',
         upload_image_failed: '上传图片失败',
+        upload_image_cancelled: '取消上传图片',
         upload_video: '上传视频',
         upload_video_success: '上传视频成功',
         upload_video_failed: '上传视频失败',
         upload_gallery_list: '上传图库',
         upload_gallery_list_success: '上传图库成功',
         upload_gallery_list_failed: '上传图库失败',
+        upload_gallery_list_cancelled: '取消上传图库',
         upload_file: '上传文件',
         upload_file_success: '上传文件成功',
         upload_file_failed: '上传文件失败',
+        upload_file_cancelled: '取消上传文件',
       }
       // 动态分组
       const all = Object.entries(this.logData.action_type_count || {}).map(([key, value]) => ({
