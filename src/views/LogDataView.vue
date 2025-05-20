@@ -84,14 +84,12 @@
             <div class="metric-title">用户数量</div>
           </div>
         </el-col>
-        
         <el-col :xs="24" :sm="8" :md="8" :lg="8" :xl="8">
           <div class="custom-metric-card">
             <div class="metric-value">{{ formatNumber(logData.message_send_avg_time || 0) }}</div>
             <div class="metric-title">消息发送耗时 (ms)</div>
           </div>
         </el-col>
-        
         <el-col :xs="24" :sm="8" :md="8" :lg="8" :xl="8">
           <div class="custom-metric-card">
             <div class="metric-value">{{ formatNumber(logData.avg_socket_time?.average_response_time || 0) }}</div>
@@ -99,28 +97,29 @@
           </div>
         </el-col>
       </el-row>
-      
-      <!-- 表格区域 -->
       <el-row :gutter="20">
-        <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12">
+        <el-col :xs="24" :sm="8" :md="8" :lg="8" :xl="8">
+          <div class="custom-metric-card">
+            <div class="metric-value">{{ formatNumber(logData.send_to_sync_avg || 0) }}</div>
+            <div class="metric-title">sync回消息耗时 (ms)</div>
+          </div>
+        </el-col>
+        <el-col :xs="24" :sm="8" :md="8" :lg="8" :xl="8">
+          <div class="custom-metric-card">
+            <div class="metric-value">{{ formatNumber(logData.attachment_file_avg_time || 0) }}</div>
+            <div class="metric-title">附件上传耗时 (ms)</div>
+          </div>
+        </el-col>
+      </el-row>
+      <!-- 分组表格区域 -->
+      <el-row :gutter="20">
+        <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
           <el-card class="table-card custom-table-card">
             <template #header>
-              <div class="card-header">
-                <h3>操作统计</h3>
-              </div>
+              <div class="card-header"><h3>消息相关</h3></div>
             </template>
             <div class="table-wrapper">
-              <el-table 
-                :data="actionTypeData" 
-                size="small" 
-                stripe 
-                style="width: 100%"
-                highlight-current-row
-                :row-class-name="highlightActionRows"
-                row-key="key"
-                class="dark-table custom-border-table no-header-line"
-                header-row-class-name="table-header-row"
-              >
+              <el-table :data="actionGroup.message" size="small" stripe style="width: 100%" class="dark-table custom-border-table no-header-line">
                 <el-table-column prop="name" label="事件" min-width="120" />
                 <el-table-column prop="value" label="数值" width="100" align="right" />
                 <el-table-column prop="key" label="字段" min-width="140" class-name="field-column" />
@@ -128,40 +127,100 @@
             </div>
           </el-card>
         </el-col>
-        
-        <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12">
+        <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
           <el-card class="table-card custom-table-card">
             <template #header>
-              <div class="card-header">
-                <h3>耗时统计</h3>
-              </div>
+              <div class="card-header"><h3>上传相关</h3></div>
             </template>
             <div class="table-wrapper">
-              <el-table 
-                :data="timeData" 
-                size="small" 
-                stripe 
-                style="width: 100%" 
-                highlight-current-row
-                :row-class-name="highlightTimeRows"
-                row-key="key"
-                class="dark-table custom-border-table no-header-line"
-                header-row-class-name="table-header-row"
-              >
+              <el-table :data="actionGroup.upload" size="small" stripe style="width: 100%" class="dark-table custom-border-table no-header-line">
                 <el-table-column prop="name" label="事件" min-width="120" />
-                <el-table-column prop="value" label="数值 (ms)" width="100" align="right" />
+                <el-table-column prop="value" label="数值" width="100" align="right" />
                 <el-table-column prop="key" label="字段" min-width="140" class-name="field-column" />
               </el-table>
             </div>
           </el-card>
         </el-col>
       </el-row>
+      <el-row :gutter="20">
+        <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
+          <el-card class="table-card custom-table-card">
+            <template #header>
+              <div class="card-header"><h3>加解密相关</h3></div>
+            </template>
+            <div class="table-wrapper">
+              <el-table :data="actionGroup.crypto" size="small" stripe style="width: 100%" class="dark-table custom-border-table no-header-line">
+                <el-table-column prop="name" label="事件" min-width="120" />
+                <el-table-column prop="value" label="数值" width="100" align="right" />
+                <el-table-column prop="key" label="字段" min-width="140" class-name="field-column" />
+              </el-table>
+            </div>
+          </el-card>
+        </el-col>
+        <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
+          <el-card class="table-card custom-table-card">
+            <template #header>
+              <div class="card-header"><h3>房间/Socket相关</h3></div>
+            </template>
+            <div class="table-wrapper">
+              <el-table :data="actionGroup.roomSocket" size="small" stripe style="width: 100%" class="dark-table custom-border-table no-header-line">
+                <el-table-column prop="name" label="事件" min-width="120" />
+                <el-table-column prop="value" label="数值" width="100" align="right" />
+                <el-table-column prop="key" label="字段" min-width="140" class-name="field-column" />
+              </el-table>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
+      <el-row v-if="actionGroup.other.length">
+        <el-col :span="24">
+          <el-card class="table-card custom-table-card">
+            <template #header>
+              <div class="card-header"><h3>其它操作</h3></div>
+            </template>
+            <div class="table-wrapper">
+              <el-table :data="actionGroup.other" size="small" stripe style="width: 100%" class="dark-table custom-border-table no-header-line">
+                <el-table-column prop="name" label="事件" min-width="120" />
+                <el-table-column prop="value" label="数值" width="100" align="right" />
+                <el-table-column prop="key" label="字段" min-width="140" class-name="field-column" />
+              </el-table>
+            </div>
+          </el-card>
+        </el-col>
+      </el-row>
+      <el-card class="table-card custom-table-card" style="margin-top: 20px;">
+        <template #header>
+          <div class="card-header">
+            <h3>其它数据字段</h3>
+          </div>
+        </template>
+        <div class="table-wrapper">
+          <el-table :data="otherLogDataFields" size="small" stripe style="width: 100%" class="dark-table custom-border-table no-header-line">
+            <el-table-column prop="key" label="字段名" min-width="160" />
+            <el-table-column prop="value" label="内容" />
+          </el-table>
+        </div>
+      </el-card>
     </div>
   </div>
 </template>
 
 <script>
 import api from '../services/api'
+
+// 只处理新结构
+function adaptLogData(raw) {
+  return {
+    action_type_count: raw.action_type_count || {},
+    avg_socket_time: raw.avg_socket_time || {},
+    user_count: raw.user_count || 0,
+    message_send_avg_time: raw.message_send_avg_time || 0,
+    send_to_sync_avg: raw.send_to_sync_avg || 0,
+    attachment_file_avg_time: raw.attachment_file_avg_time || 0,
+    upload_gallery_list_avg_time: raw.upload_gallery_list_avg_time || 0,
+    ...raw
+  }
+}
 
 export default {
   name: 'LogDataView',
@@ -174,40 +233,88 @@ export default {
         userId: ''
       },
       logData: {
-        action_type_count: {
-          socket_disconnected_count: 0,
-          launch_count: 0,
-          enter_room_count: 0,
-          send_message_count: 0,
-          send_success_count: 0,
-          send_fail_count: 0
-        },
-        avg_socket_time: {
-          average_response_time: 0
-        },
+        action_type_count: {},
+        avg_socket_time: {},
         user_count: 0,
         message_send_avg_time: 0,
-        send_to_sync_avg: 0
+        send_to_sync_avg: 0,
+        attachment_file_avg_time: 0,
+        upload_gallery_list_avg_time: 0
       }
     }
   },
   computed: {
-    actionTypeData() {
-      return [
-        { name: '启动次数', value: this.logData.action_type_count?.launch_count || 0, key: 'launch_count' },
-        { name: 'socket断开次数', value: this.logData.action_type_count?.socket_disconnected_count || 0, key: 'socket_disconnected_count' },
-        { name: '进入房间次数', value: this.logData.action_type_count?.enter_room_count || 0, key: 'enter_room_count' },
-        { name: '发消息次数', value: this.logData.action_type_count?.send_message_count || 0, key: 'send_message_count' },
-        { name: '消息发送成功次数', value: this.logData.action_type_count?.send_success_count || 0, key: 'send_success_count' },
-        { name: '消息发送失败次数', value: this.logData.action_type_count?.send_fail_count || 0, key: 'send_fail_count' }
-      ]
+    actionGroup() {
+      // 分组规则
+      const nameMap = {
+        socket_disconnected_count: 'socket断开次数',
+        launch_count: '启动次数',
+        enter_room_count: '进入房间次数',
+        send_message_count: '发消息次数',
+        send_success_count: '消息发送成功次数',
+        send_fail_count: '消息发送失败次数',
+        encrypt_event: '加密事件',
+        encrypt_event_success: '加密成功',
+        encrypt_event_failed: '加密失败',
+        decrypt_event_failed: '解密失败',
+        decrypt_event_success: '解密成功',
+        upload_image: '上传图片',
+        upload_image_success: '上传图片成功',
+        upload_image_failed: '上传图片失败',
+        upload_video: '上传视频',
+        upload_video_success: '上传视频成功',
+        upload_video_failed: '上传视频失败',
+        upload_gallery_list: '上传图库',
+        upload_gallery_list_success: '上传图库成功',
+        upload_gallery_list_failed: '上传图库失败',
+        upload_file: '上传文件',
+        upload_file_success: '上传文件成功',
+        upload_file_failed: '上传文件失败',
+      }
+      // 动态分组
+      const all = Object.entries(this.logData.action_type_count || {}).map(([key, value]) => ({
+        name: nameMap[key] || key,
+        value,
+        key
+      }))
+      // 上传相关：所有以 upload_ 开头的
+      const upload = all.filter(i => i.key.startsWith('upload_'))
+      // 加解密相关：encrypt_*, decrypt_*
+      const crypto = all.filter(i => i.key.startsWith('encrypt_') || i.key.startsWith('decrypt_'))
+      // 消息相关：send_*
+      const message = all.filter(i => i.key.startsWith('send_'))
+      // 房间/Socket相关
+      const roomSocket = all.filter(i => ['launch_count', 'enter_room_count', 'socket_disconnected_count'].includes(i.key))
+      // 其它
+      const groupedKeys = new Set([...upload, ...crypto, ...message, ...roomSocket].map(i => i.key))
+      const other = all.filter(i => !groupedKeys.has(i.key))
+      // 分组内排序
+      const sortByKey = arr => arr.slice().sort((a, b) => a.key.localeCompare(b.key))
+      return {
+        message: sortByKey(message),
+        upload: sortByKey(upload),
+        crypto: sortByKey(crypto),
+        roomSocket: sortByKey(roomSocket),
+        other: sortByKey(other)
+      }
     },
     timeData() {
-      return [
-        { name: 'socket链接时长', value: this.formatNumber(this.logData.avg_socket_time?.average_response_time || 0), key: 'avg_socket_time' },
-        { name: '发消息耗时', value: this.formatNumber(this.logData.message_send_avg_time || 0), key: 'avg_sendmessage_time' },
-        { name: 'sync回消息耗时', value: this.formatNumber(this.logData.send_to_sync_avg || 0), key: 'send_to_sync' }
+      // 只展示新结构耗时相关字段
+      const timeFields = [
+        { key: 'avg_socket_time', name: 'socket链接时长', value: this.formatNumber(this.logData.avg_socket_time?.average_response_time || 0) },
+        { key: 'message_send_avg_time', name: '发消息耗时', value: this.formatNumber(this.logData.message_send_avg_time || 0) },
+        { key: 'send_to_sync_avg', name: 'sync回消息耗时', value: this.formatNumber(this.logData.send_to_sync_avg || 0) },
+        { key: 'attachment_file_avg_time', name: '附件上传耗时', value: this.formatNumber(this.logData.attachment_file_avg_time || 0) },
+        { key: 'upload_gallery_list_avg_time', name: '图库上传耗时', value: this.formatNumber(this.logData.upload_gallery_list_avg_time || 0) },
       ]
+      return timeFields.filter(item => Number(item.value) > 0)
+    },
+    otherLogDataFields() {
+      // 过滤掉已在卡片和表格中展示的字段
+      const exclude = ['action_type_count', 'avg_socket_time', 'user_count', 'message_send_avg_time', 'send_to_sync_avg', 'attachment_file_avg_time', 'upload_gallery_list_avg_time']
+      return Object.entries(this.logData)
+        .filter(([key, value]) => !exclude.includes(key))
+        .map(([key, value]) => ({ key, value: typeof value === 'object' ? JSON.stringify(value) : value }))
     }
   },
   mounted() {
@@ -222,39 +329,14 @@ export default {
           this.filters.messageType,
           this.filters.userId
         )
-        this.logData = response.data
+        this.logData = adaptLogData(response.data)
       } catch (error) {
         console.error('获取日志数据失败:', error)
         this.$message.error('获取数据失败，请稍后重试')
       }
     },
     formatNumber(value) {
-      // 确保数值类型并保留一位小数
       return Number(value).toFixed(1)
-    },
-    highlightSocketRow({ row }) {
-      if (row.key === 'socket_disconnected_count') {
-        return 'highlighted-row'
-      }
-      return ''
-    },
-    highlightSendMessageRow({ row }) {
-      if (row.key === 'avg_sendmessage_time') {
-        return 'highlighted-row'
-      }
-      return ''
-    },
-    highlightActionRows({ row }) {
-      if (row.key === 'send_message_count' || row.key === 'send_fail_count') {
-        return 'highlighted-row'
-      }
-      return ''
-    },
-    highlightTimeRows({ row }) {
-      if (row.key === 'avg_sendmessage_time') {
-        return 'highlighted-row'
-      }
-      return ''
     }
   }
 }
