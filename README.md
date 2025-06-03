@@ -84,7 +84,7 @@ sync_online_receive_message
 
 先找出所有action_type=sync_online_receive_message和send_message_success的log，
 遍历一遍，用event_id为key，把event_id相同的log放到一个数组里面按照时间从小到大排序作为value 组成nsdictionary结构
-遍历每个数组，判断数组长度是否是2，如果不是2打印出数组详细信息，如果sync_online_receive_message时间大于send_message_success的时间，让其相减得到一个时间差，然后把这个时间差加到一个数组里面，最后把这个数组里面的所有时间差求平均值
+遍历每个数组，如果sync_online_receive_message时间大于send_message_success的时间，让其相减得到一个时间差，然后把这个时间差加到一个数组里面，最后把这个数组里面的所有时间差求平均值
 
 
 二：[漫游的情况]
@@ -192,3 +192,19 @@ m.image
 
 【三：统计当天在线人数】
 统计一段时间内的DeviceId的数量
+
+
+
+
+
+# [配置page发布]
+To configure your site to publish with GitHub Actions:
+On GitHub, navigate to your site's repository.
+一：Under your repository name, click  Settings. If you cannot see the "[Settings]" tab, select the  dropdown menu, then click Settings.
+
+二：Screenshot of a repository header showing the tabs. The "Settings" tab is highlighted by a dark orange outline.
+In the "[Code_and_automation]" section of the sidebar, click  Pages.
+
+三：Under "[Build_and_deployment]", under "Source", select GitHub Actions.
+
+四：选择static html，会生成一个yal配置文件，在里面设置dist路径，提交代码就ok了 [见工程中workflow/static.yml]

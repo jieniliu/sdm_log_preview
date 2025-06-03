@@ -94,6 +94,56 @@
           </div>
         </el-col>
       </el-row>
+      
+      <!-- 漫游消息流程图 -->
+      <el-card class="roaming-flow-card" v-if="logData.avg_roaming_response">
+        <template #header>
+          <div class="card-header"><h3>漫游消息流程耗时</h3></div>
+        </template>
+        <div class="roaming-flow-container">
+          <div class="flow-node" id="socket-connected">
+            <div class="node-content">socket_connected</div>
+          </div>
+          <div class="flow-arrow">
+            <div class="arrow-line"></div>
+            <div class="arrow-label">{{ formatNumber(0.0003) }}ms</div>
+          </div>
+          <div class="flow-node" id="receive-seqs">
+            <div class="node-content">receive_seqs_updated_response</div>
+          </div>
+          <div class="flow-arrow">
+            <div class="arrow-line"></div>
+            <div class="arrow-label">{{ formatNumber(logData.avg_roaming_response?.append_need_update_room_avg || 0) }}ms</div>
+          </div>
+          <div class="flow-node" id="append-need">
+            <div class="node-content">append_need_update_room</div>
+          </div>
+          <div class="flow-arrow">
+            <div class="arrow-line"></div>
+            <div class="arrow-label">{{ formatNumber(logData.avg_roaming_response?.roaming_get_messages_from_server_avg || 0) }}ms</div>
+          </div>
+          <div class="flow-node" id="get-messages">
+            <div class="node-content">roaming_get_messages_from_server</div>
+          </div>
+          <div class="flow-arrow">
+            <div class="arrow-line"></div>
+            <div class="arrow-label">{{ formatNumber(logData.avg_roaming_response?.roaming_receive_message_avg || 0) }}ms</div>
+          </div>
+          <div class="flow-node" id="receive-message">
+            <div class="node-content">roaming_receive_message</div>
+          </div>
+        </div>
+        <div class="roaming-stats">
+          <div class="stat-item">
+            <span class="stat-label">receive_seqs_updated_response 平均耗时:</span>
+            <span class="stat-value">{{ formatNumber(logData.avg_roaming_response?.receive_seqs_updated_response_avg || 0) }}ms</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">总平均耗时:</span>
+            <span class="stat-value">{{ formatNumber(logData.avg_roaming_response?.total_avg || 0) }}ms</span>
+          </div>
+        </div>
+      </el-card>
       <el-row :gutter="20" style="margin-bottom: 24px;">
         <el-col v-if="filters.messageType === 'm.text' || !filters.messageType" :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
           <el-card class="table-card custom-table-card" style="height: 100%;">
@@ -287,6 +337,7 @@ function adaptLogData(raw) {
     user_count: raw.user_count || 0,
     roaming_message_avg_time: raw.roaming_message_avg_time || 0,
     delay_message_avg_time: raw.delay_message_avg_time || 0,
+    avg_roaming_response: raw.avg_roaming_response || {},
     attachment_message_avg_time: raw.attachment_message_avg_time || {},
     text_message_avg_time: raw.text_message_avg_time || {},
     ...raw
@@ -523,6 +574,112 @@ export default {
   color: var(--text-color);
   font-weight: 500;
   text-align: center;
+}
+
+/* 漫游消息流程图样式 */
+.roaming-flow-card {
+  margin-bottom: 24px;
+  background-color: #1e1e1e;
+  border: 1px solid var(--border-color);
+}
+
+.roaming-flow-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 10px;
+  overflow-x: auto;
+  background-color: #121212;
+  border-radius: 4px;
+  min-height: 100px;
+}
+
+.flow-node {
+  background-color: #2c2c2c;
+  border: 1px solid #444;
+  border-radius: 4px;
+  padding: 10px 15px;
+  min-width: 120px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.flow-node:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+  border-color: #666;
+}
+
+.node-content {
+  font-size: 0.85rem;
+  color: #e0e0e0;
+  white-space: nowrap;
+}
+
+.flow-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 5px;
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+.arrow-line {
+  height: 2px;
+  background-color: #555;
+  width: 100%;
+  position: relative;
+}
+
+.arrow-line:after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: -4px;
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 8px solid #555;
+}
+
+.arrow-label {
+  font-size: 0.75rem;
+  color: #aaa;
+  margin-top: 5px;
+  text-align: center;
+}
+
+.roaming-stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin-top: 15px;
+  padding: 10px 15px;
+  background-color: #1a1a1a;
+  border-radius: 4px;
+  border-top: 1px solid #333;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  margin: 5px 15px;
+}
+
+.stat-label {
+  color: #aaa;
+  margin-right: 10px;
+  font-size: 0.9rem;
+}
+
+.stat-value {
+  color: #4db6ac;
+  font-weight: 500;
+  font-size: 1rem;
 }
 
 .filter-card {
